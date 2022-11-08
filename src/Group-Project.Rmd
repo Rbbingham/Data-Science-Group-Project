@@ -1,0 +1,26 @@
+---
+title: "GROUP PROJECT CSC 3220"
+output: html_document
+date: "2022-11-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library("ggplot2")
+library("DT")
+library("pander")
+```
+
+
+```{r}
+zip_code_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t', header = TRUE)
+```
+
+```{r, warning=FALSE}
+dim(zip_code_market.df)
+datatable(zip_code_market.df, options=list(scrollX=TRUE))
+```
+
