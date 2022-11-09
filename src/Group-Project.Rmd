@@ -12,15 +12,25 @@ knitr::opts_chunk$set(echo = TRUE)
 library("ggplot2")
 library("DT")
 library("pander")
+library("parallel")
 ```
 
-
 ```{r}
-zip_code_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t', header = TRUE)
+state_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t', header = TRUE)
 ```
 
 ```{r, warning=FALSE}
-dim(zip_code_market.df)
-datatable(zip_code_market.df, options=list(scrollX=TRUE))
+dim(state_market.df)
+# datatable(state_market.df, options=list(scrollX=TRUE))
 ```
 
+```{r, fig.width = 12, fig.height = 12}
+state_market.df$period_begin <- as.Date(state_market.df$period_begin)
+split_by_year <- split(state_market.df, format(state_market.df$period_begin, "%Y"))
+
+lapply(split_by_year, function(i) ggplot(i, aes(x = state_code, y = median_sale_price))
+                                  + geom_point() 
+                                  + xlab(format(i$period_begin, "%Y"))
+                                  + ylab("Median Sales Price")
+                                  + scale_y_continuous(labels = function(x) format(x, scientific = TRUE)))
+```
