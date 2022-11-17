@@ -99,7 +99,15 @@ cor.df <- subset.data.frame(state_market.df, select = c(median_sale_price, media
 
 datatable(cor.df)
 
+
 cor.table <- cor(cor.df, use="pairwise.complete.obs")
+
+rownames(cor.table) <- c("median sale price", "median list price", "median sale price year-on-year", "median list price year-on-year", "median sale ppsf", "median list ppsf", "homes sold year-old-year", "pending sales year-on-year", "new listings year-on-year", "inventory year-on-year")
+
+colnames(cor.table) <- c("median sale price", "median list price", "median sale price year-on-year", "median list price year-on-year", "median sale ppsf", "median list ppsf", "homes sold year-old-year", "pending sales year-on-year", "new listings year-on-year", "inventory year-on-year")
+
+matrix <- corrplot(cor.table)
+
 corrplot(cor.table)
 ```
 
