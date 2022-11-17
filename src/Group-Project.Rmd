@@ -15,11 +15,12 @@ library("DT")
 library("pander")
 library("corrplot")
 library("zoo")
+library("reshape")
 ```
 
 
 ```{r}
-state_market.df <- read.table("./state_market_tracker.tsv000", sep = '\t', header = TRUE)
+state_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t', header = TRUE)
 ```
 
 ```{r}
@@ -102,11 +103,29 @@ cor.table <- cor(cor.df, use="pairwise.complete.obs")
 corrplot(cor.table)
 ```
 
-```{r}
-(ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price))
-                        + geom_bin_2d(binwidth = c(1/12, 10000))
-                        + xlab("Time")
-                        + ylab("Median Sales Price")
-                        + scale_x_yearmon(n = 10))
+```{r, fig.width = 12, fig.height = 10}
+data_median_salemedian_list <- data.frame(state_market.df[, c("median_sale_price", "median_list_price")])
+
+data_median_salemedian_list$refseq <- c("median_sale_price", "median_list_price")
+s.plot <- melt(data_median_salemedian_list)
+
+ggplot(s.plot, aes(x = value, colour = variable, fill = variable)) + geom_density(alpha = 0.1)
+
+lm_eqn <- function(df){
+    m <- lm(median_sale_price ~ as.yearmon(period_begin), df);
+    eq <- substitute(italic(median_sale_price) == b %.% italic(period_begin) + a*","~~italic(r)^2~"="~r2, 
+         list(a = format(unname(coef(m)[1]), digits = 2),
+              b = format(unname(coef(m)[2]), digits = 2),
+             r2 = format(summary(m)$r.squared, digits = 3)))
+    as.character(as.expression(eq));
+}
+
+ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)) +
+                        geom_bin_2d(binwidth = c(1/12, 10000)) +
+                        xlab("Time") +
+                        ylab("Median Sales Price") +
+                        scale_x_yearmon(n = 10) +
+                        geom_smooth(method = "lm", se = FALSE, color = "red") +
+                        annotate("text", x = as.numeric(as.yearmon("2014-06-01")), y = 3e+06, parse = TRUE, label = lm_eqn(state_market.df))
 ```
 
