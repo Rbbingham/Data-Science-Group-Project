@@ -32,6 +32,16 @@ state_market.df$median_list_price <- state_market.df$median_list_price / 1000
 state_market.df$property_type[state_market.df$property_type == "Multi-Family (2-4 Unit)"] <- "Multi-Family"
 ```
 
+# *Should we standardize the data for median sales price and median list price.*
+[Info](https://www.egnyte.com/guides/life-sciences/data-standardization)
+[Housing Price Example](https://towardsdatascience.com/predicting-house-prices-with-linear-regression-machine-learning-from-scratch-part-ii-47a0238aeac1)
+
+```{r}
+# These are the standardization formulals
+# state_market.df$stan_median_sale_price <- (state_market.df$median_sale_price - mean(state_market.df$median_sale_price)) / sd(state_market.df$median_sale_price)
+# state_market.df$stan_median_list_price <- (state_market.df$median_list_price - mean(state_market.df$median_list_price)) / sd(state_market.df$median_list_price)
+```
+
 ```{r}
 #new_state_market.df = subset(state_market.df, select = -c(period_duration, region_type_id, table_id, is_seasonally_adjusted, region_type, city, parent_metro_region_metro_code, price_drops, price_drops_mom, price_drops_yoy))
 
@@ -50,6 +60,7 @@ state_market.df$property_type[state_market.df$property_type == "Multi-Family (2-
 
 ```{r, fig.align = 'center', fig.width = 12, fig.height = 10, warning = FALSE}
 split_by_year <- split(state_market.df, format(state_market.df$period_begin, "%Y"))
+
 ggplot(split_by_year[[length(split_by_year)]], aes(x = state_code, y = median_sale_price, color=median_sale_price)) +
   geom_boxplot(colour="#003366", fill="#66FFFF", alpha=5) +
   geom_point() +
