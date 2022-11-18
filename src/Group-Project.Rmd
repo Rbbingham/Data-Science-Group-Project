@@ -1,6 +1,8 @@
 ---
 title: "GROUP PROJECT CSC 3220"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: "2022-11-08"
 ---
 
@@ -12,16 +14,109 @@ knitr::opts_chunk$set(echo = TRUE)
 library("ggplot2")
 library("DT")
 library("pander")
-library("parallel")
+library("corrplot")
+library("zoo")
+library("reshape")
+library("scales")
 ```
 
 ```{r}
 state_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t', header = TRUE)
 ```
 
-```{r, warning=FALSE}
-dim(state_market.df)
-# datatable(state_market.df, options=list(scrollX=TRUE))
+```{r}
+state_market.df$period_begin <- as.Date(state_market.df$period_begin)
+state_market.df$period_end <- as.Date(state_market.df$period_end)
+state_market.df$median_sale_price <- state_market.df$median_sale_price / 1000
+state_market.df$median_list_price <- state_market.df$median_list_price / 1000
+```
+
+```{r}
+#new_state_market.df = subset(state_market.df, select = -c(period_duration, region_type_id, table_id, is_seasonally_adjusted, region_type, city, parent_metro_region_metro_code, price_drops, price_drops_mom, price_drops_yoy))
+
+#specific_date <- c("2017-12-31")
+#specific_date <- as.Date(specific_date, format = "%Y-%m-%d")
+
+#new_state_market.df = subset(new_state_market.df, period_begin > specific_date)
+``` 
+
+```{r}
+#dim(new_state_market.df)
+#renderDataTable({datatable(new_state_market.df, options=list(scrollX=TRUE))})
+#datatable(new_state_market.df, options=list(scrollX=TRUE))
+
+```
+
+```{r}
+variables <- colnames(state_market.df)
+numeric_vars <- variables[c(-1,-48)]
+categorical_vars <- variables[c(1)]
+```
+
+
+```{r, fig.width = 12, fig.height = 10}
+split_by_year <- split(state_market.df, format(state_market.df$period_begin, "%Y"))
+ggplot(split_by_year[[length(split_by_year)]], aes(x = state_code, y = median_sale_price, color=median_sale_price)) +
+  geom_boxplot(colour="#003366", fill="#66FFFF", alpha=5) +
+  geom_point() +
+  xlab("2021") +
+  ylab("Median Sales Price")
+```
+
+```{r}
+mean_years <- data.frame(state_market.df$period_begin, state_market.df$median_sale_price_yoy, state_market.df$state)
+```
+
+```{r}
+new_df <- subset.data.frame(state_market.df, select = c(state_code, median_list_price, median_sale_price),  drop = FALSE)
+
+print(
+    ggplot(new_df, aes_string(x=new_df$median_list_price))
+    + geom_histogram(
+      colour="darkorchid4", fill="darkorchid1", position="identity", bins=30, alpha=0.2
+    )
+    + ggtitle(paste("Frequency Distribution of median list price", sep=""))
+    + theme(plot.title=element_text(hjust = 0.5)))
+print(
+    ggplot(new_df, aes_string(x=new_df$median_sale_price))
+    + geom_histogram(
+      colour="red", fill="firebrick1", position="identity", bins=30, alpha=0.2
+    )
+    + ggtitle(paste("Frequency Distribution of median sale price", sep=""))
+    + theme(plot.title=element_text(hjust = 0.5)))
+```
+
+```{r}
+cor.df <- subset.data.frame(state_market.df, select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy),  drop = FALSE)
+
+cor.table <- cor(cor.df, use="pairwise.complete.obs")
+corrplot(cor.table)
+```
+
+```{r, fig.width = 12, fig.height = 10}
+lm_eqn <- function(df){
+    m <- lm(median_sale_price ~ as.yearmon(period_begin), df);
+    eq <- substitute(italic(median_sale_price) == b %.% italic(period_begin) + a*","~~italic(r)^2~"="~r2, 
+         list(a = format(unname(coef(m)[1]), digits = 2),
+              b = format(unname(coef(m)[2]), digits = 2),
+             r2 = format(summary(m)$r.squared, digits = 3)))
+    as.character(as.expression(eq));
+}
+
+ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)) +
+                        geom_bin_2d(binwidth = c(1/12, 10000)) +
+                        xlab("Time") +
+                        ylab("Median Sales Price") +
+                        scale_x_yearmon(n = 10) +
+                        geom_smooth(method = "lm", se = FALSE, color = "red") +
+                        annotate("text", x = as.numeric(as.yearmon("2014-06-01")), y = 3e+06, parse = TRUE, label = lm_eqn(state_market.df))
+```
+
+```{r}
+ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
+  geom_boxplot(colour="#003366", fill="#66FFFF", alpha=1/2) +
+  xlab("Property Type") +
+  ylab("Median Sales Price")
 ```
 
 ```{r, fig.width = 12, fig.height = 12}
