@@ -29,6 +29,7 @@ state_market.df$period_begin <- as.Date(state_market.df$period_begin)
 state_market.df$period_end <- as.Date(state_market.df$period_end)
 state_market.df$median_sale_price <- state_market.df$median_sale_price / 1000
 state_market.df$median_list_price <- state_market.df$median_list_price / 1000
+state_market.df$property_type[state_market.df$property_type == "Multi-Family (2-4 Unit)"] <- "Multi-Family"
 ```
 
 ```{r}
@@ -98,9 +99,9 @@ ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)
   scale_x_yearmon(n = 10) +
   geom_smooth(method = "lm", se = FALSE, color = "red") +
   annotate("text", x = as.numeric(as.yearmon("2014-06-01")), y = 3000, parse = TRUE, label = lm_eqn(state_market.df))
-
-?ggtitle
 ```
+
+#### Both townhouse and multi-family have extreme outliers in the median sales price
 
 ```{r, fig.align = 'center', warning = FALSE}
 ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
@@ -109,4 +110,50 @@ ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
   ylab("Median Sales Price (in thousands)") +
   ggtitle("Property Type vs Median Sales Price") +
   theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r, echo = FALSE}
+cat("For our outlier tests, we will test if anything is above the 99th quantile.
+We can see that for the outliers for multi-family housing the state Hawaii has the most outliers.")
+multi_family <- with(state_market.df, state_market.df[property_type == "Multi-Family", ])
+upper_bound <- quantile(multi_family$median_sale_price, 0.99, na.rm = TRUE)
+outlier_indices <- which(multi_family$median_sale_price > upper_bound)
+table(multi_family$region[outlier_indices])
+
+cat("The same thing is repeated with townhouses, but Connecticut has one less Hawaii.")
+townhouse <- with(state_market.df, state_market.df[property_type == "Townhouse", ])
+upper_bound <- quantile(townhouse$median_sale_price, 0.99, na.rm = TRUE)
+outlier_indices <- which(townhouse$median_sale_price > upper_bound)
+table(townhouse$region[outlier_indices])
+```
+
+#### The outliers are not as pronounced with the median list price
+
+```{r, fig.align = 'center', warning = FALSE}
+ggplot(state_market.df, aes(x = property_type, y = median_list_price)) +
+  geom_boxplot(colour="#003366", fill="#66FFFF", alpha=1/2) +
+  xlab("Property Type") +
+  ylab("Median Sales Price (in thousands)") +
+  ggtitle("Property Type vs Median List Price") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r, echo = FALSE}
+cat("California leads the US in most outliers for all residential house prices.")
+residential <- with(state_market.df, state_market.df[property_type == "All Residential", ])
+upper_bound <- quantile(residential$median_list_price, 0.99, na.rm = TRUE)
+outlier_indices <- which(residential$median_list_price > upper_bound)
+table(residential$region[outlier_indices])
+
+cat("New York leads the US in most outliers for condo/co-op house prices.")
+condo_coop <- with(state_market.df, state_market.df[property_type == "Condo/Co-op", ])
+upper_bound <- quantile(condo_coop$median_list_price, 0.99, na.rm = TRUE)
+outlier_indices <- which(condo_coop$median_list_price > upper_bound)
+table(condo_coop$region[outlier_indices])
+
+cat("California and Columbia leads the US in most outliers for single residential house prices.")
+single_family <- with(state_market.df, state_market.df[property_type == "Single Family Residential", ])
+upper_bound <- quantile(single_family$median_list_price, 0.99, na.rm = TRUE)
+outlier_indices <- which(single_family$median_list_price > upper_bound)
+table(single_family$region[outlier_indices])
 ```
