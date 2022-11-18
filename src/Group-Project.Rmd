@@ -54,27 +54,22 @@ ggplot(split_by_year[[length(split_by_year)]], aes(x = state_code, y = median_sa
   geom_point() +
   xlab("2021") +
   ylab("Median Sales Price (in thousands)") +
-  xtitle("Distribution of Median Sale Price per State")
-
+  ggtitle("Distribution of Median Sale Price per State") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r, fig.align = 'center', warning = FALSE}
 new_df <- subset.data.frame(state_market.df, select = c(state_code, median_list_price, median_sale_price),  drop = FALSE)
 
-print(
-    ggplot(new_df, aes_string(x=new_df$median_list_price))
-    + geom_histogram(
-      colour="darkorchid4", fill="darkorchid1", position="identity", bins=30, alpha=0.2
-    )
-    + ggtitle(paste("Frequency Distribution of median list price", sep=""))
-    + theme(plot.title=element_text(hjust = 0.5)))
-print(
-    ggplot(new_df, aes_string(x=new_df$median_sale_price))
-    + geom_histogram(
-      colour="red", fill="firebrick1", position="identity", bins=30, alpha=0.2
-    )
-    + ggtitle(paste("Frequency Distribution of median sale price", sep=""))
-    + theme(plot.title=element_text(hjust = 0.5)))
+ggplot(new_df, aes_string(x=new_df$median_list_price)) +
+  geom_histogram(colour="darkorchid4", fill="darkorchid1", position="identity", bins=30, alpha=0.2) +
+  ggtitle("Frequency Distribution of median list price") +
+  theme(plot.title=element_text(hjust = 0.5))
+
+ggplot(new_df, aes_string(x=new_df$median_sale_price)) +
+  geom_histogram(colour="red", fill="firebrick1", position="identity", bins=30, alpha=0.2) +
+  ggtitle("Frequency Distribution of median sale price") +
+  theme(plot.title=element_text(hjust = 0.5))
 ```
 
 ```{r, fig.align = 'center', warning = FALSE}
@@ -98,7 +93,7 @@ ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)
   geom_bin_2d(binwidth = c(1/12, 10)) +
   xlab("Time") +
   ylab("Median Sales Price") +
-  ggtitle("Median Sales Price vs Time") +
+  ggtitle("Median Sales Price over Time") +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_x_yearmon(n = 10) +
   geom_smooth(method = "lm", se = FALSE, color = "red") +
@@ -111,5 +106,7 @@ ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)
 ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
   geom_boxplot(colour="#003366", fill="#66FFFF", alpha=1/2) +
   xlab("Property Type") +
-  ylab("Median Sales Price (in thousands)")
+  ylab("Median Sales Price (in thousands)") +
+  ggtitle("Property Type vs Median Sales Price") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
