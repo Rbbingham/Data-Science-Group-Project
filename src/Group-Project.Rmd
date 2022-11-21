@@ -70,7 +70,7 @@ numeric_vars <- variables[c(-1,-48)]
 categorical_vars <- variables[c(1)]
 ```
 
-Here, we created a boxplot graph for the median list price of the homes in each neighborhood in the dataset, with each boxplot representing . Hawaii and and Connecticut were had the highest number of outliers. Since there were more outliers above the boxplot than below it in both cases, we attributed these anomalies to the high cost of living in both states, Since Hawaii is a vacation destination and Connecticut is a New England state with a close proximity to New York City.
+Here, we created a boxplot graph for the median list price of the homes in each neighborhood in the dataset in the year 2021, with each boxplot representing each state. Hawaii and and Connecticut were had the highest number of outliers. Since there were more outliers above the boxplot than below it in both cases, we attributed these anomalies to the high cost of living in both states, Since Hawaii is a vacation destination and Connecticut is a New England state with a close proximity to New York City. We can also assume that the states that have a lower overall median sale price also have more consistent prices since boxplots such as Oklahoma and Ohio have a much lower variance and standard deviation than states with higher medians.
 
 ```{r, fig.align = 'center', fig.width = 12, fig.height = 10}
 split_by_year <- split(state_market.df, format(state_market.df$period_begin, "%Y"))
@@ -84,7 +84,10 @@ ggplot(split_by_year[[length(split_by_year)]], aes(x = state_code, y = median_sa
 ```
 \newpage
 
-We created 2 histograms. One is for the median list price of housing units in each of the 27,054 neighborhoods from 2012 to 2021. The other is the median sale price of  over the same length of time. We not
+## Interpreting the Data
+
+
+We created 2 histograms. One is for the median list price of housing units in each of the 27,054 neighborhoods from 2012 to 2021. The other is the median sale price of  over the same length of time. We noticed that both graphs are skewed to the right, so we can assume that there are more homes sold and listed above the overall median home price than below it in the U.S. We also noticed that there is much less variance in the sale price than in the list price, with the right skew in the list price being much less pronounced in the list price than the sale price. Therefore, we can assume that if the asking/list price is higher than the median, the seller receives less in the final sale price in most cases.
 
 ```{r}
 mean_years <- data.frame(state_market.df$period_begin, state_market.df$median_sale_price_yoy, state_market.df$state)
@@ -98,7 +101,7 @@ print(
     )
     + ggtitle(paste("Frequency Distribution of median list price", sep=""))
     + theme(plot.title=element_text(hjust = 0.5))
-    + xlab("Median List Price of Each Neighboorhood")
+    + xlab("Median List Price of Each Neighboorhood (in thousands)")
     + ylab("Frequency of Neighborhoods")
     + ylim(0, 12500))
 ```
@@ -113,7 +116,7 @@ print(
     )
     + ggtitle(paste("Frequency Distribution of median sale price", sep=""))
     + theme(plot.title=element_text(hjust = 0.5))
-    + xlab("Median Sale Price of Each Neighboorhood")
+    + xlab("Median Sale Price of Each Neighboorhood (in thousands)")
     + ylab("Frequency of Neighborhoods")
     + ylim(0, 12500))
 ```
@@ -135,15 +138,6 @@ corrplot(cor.table)
 ```
 
 
-```{r}
-data_median_salemedian_list <- data.frame(state_market.df[, c("median_sale_price", "median_list_price")])
-
-data_median_salemedian_list$refseq <- c("median_sale_price", "median_list_price")
-s.plot <- melt(data_median_salemedian_list)
-
-ggplot(s.plot, aes(x = value, colour = variable, fill = variable)) + geom_density(alpha = 0.1)
-
-```
 
 ```{r, fig.width = 12, fig.height = 10}
 lm_eqn <- function(df){
@@ -173,13 +167,5 @@ ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
   ylab("Median Sales Price")
 ```
 
-```{r, fig.width = 12, fig.height = 12}
-state_market.df$period_begin <- as.Date(state_market.df$period_begin)
-split_by_year <- split(state_market.df, format(state_market.df$period_begin, "%Y"))
+## Conclusion
 
-lapply(split_by_year, function(i) ggplot(i, aes(x = state_code, y = median_sale_price))
-                                  + geom_point() 
-                                  + xlab(format(i$period_begin, "%Y"))
-                                  + ylab("Median Sales Price")
-                                  + scale_y_continuous(labels = function(x) format(x, scientific = TRUE)))
-```
