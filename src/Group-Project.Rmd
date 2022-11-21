@@ -67,18 +67,38 @@ ggplot(split_by_year[[length(split_by_year)]], aes(x = state_code, y = median_sa
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r, fig.align = 'center', warning = FALSE}
+\newpage
+
+We created 2 histograms. One is for the median list price of housing units in each of the 27,054 neighborhoods from 2012 to 2021. The other is the median sale price of  over the same length of time. We not
+
+```{r}
+mean_years <- data.frame(state_market.df$period_begin, state_market.df$median_sale_price_yoy, state_market.df$state)
 new_df <- subset.data.frame(state_market.df, select = c(state_code, median_list_price, median_sale_price),  drop = FALSE)
+print(
+    ggplot(new_df, aes_string(x=new_df$median_list_price))
+    + geom_histogram(
+      colour="darkorchid4", fill="darkorchid1", position="identity", bins=30, alpha=0.2
+    )
+    + ggtitle(paste("Frequency Distribution of median list price", sep=""))
+    + theme(plot.title=element_text(hjust = 0.5))
+    + xlab("Median List Price of Each Neighboorhood")
+    + ylab("Frequency of Neighborhoods")
+    + ylim(0, 12500))
+```
 
-ggplot(new_df, aes_string(x=new_df$median_list_price)) +
-  geom_histogram(colour="darkorchid4", fill="darkorchid1", position="identity", bins=30, alpha=0.2) +
-  ggtitle("Frequency Distribution of median list price") +
-  theme(plot.title=element_text(hjust = 0.5))
 
-ggplot(new_df, aes_string(x=new_df$median_sale_price)) +
-  geom_histogram(colour="red", fill="firebrick1", position="identity", bins=30, alpha=0.2) +
-  ggtitle("Frequency Distribution of median sale price") +
-  theme(plot.title=element_text(hjust = 0.5))
+
+```{r}
+print(
+    ggplot(new_df, aes_string(x=new_df$median_sale_price))
+    + geom_histogram(
+      colour="red", fill="firebrick1", position="identity", bins=30, alpha=0.2
+    )
+    + ggtitle(paste("Frequency Distribution of median sale price", sep=""))
+    + theme(plot.title=element_text(hjust = 0.5))
+    + xlab("Median Sale Price of Each Neighboorhood")
+    + ylab("Frequency of Neighborhoods")
+    + ylim(0, 12500))
 ```
 
 ```{r, fig.align = 'center', warning = FALSE}
