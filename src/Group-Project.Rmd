@@ -10,7 +10,6 @@ date: "2022-11-08"
 output:
   html_document:
     df_print: paged
-  pdf_document: default
 header-includes: \usepackage{fvextra} \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 ---
 
@@ -134,7 +133,7 @@ ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)
   annotate("text", x = as.numeric(as.yearmon("2014-06-01")), y = 3000, parse = TRUE, label = lm_eqn(state_market.df))
 ```
 
-#### Both townhouse and multi-family have extreme outliers in the median sales price
+#### Both townhouse and multi-family have extreme outliers in the median sales price.
 
 ```{r}
 ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
@@ -161,15 +160,14 @@ property_type_outlier_table <- function(df, type, sale_price = TRUE){
   print(table(data$region[outlier_indices]))
 }
 
-cat("For our outlier tests, we will test if anything is above the 99th quantile.
-We can see that for the outliers for multi-family housing the state Hawaii has the most outliers.")
+cat("For our outlier tests, we will test if anything is above the 99th quantile. We can see that for the outliers for multi-family housing the state Hawaii has the most outliers. This gives us a good explanation in the reason for the outliers, since Hawaii is a small state in the middle of the Pacific serverely limiting the supply of land.")
 property_type_outlier_table(state_market.df, type = "Multi-Family")
 
-cat("The same thing is repeated with townhouses, but Connecticut has one less Hawaii.")
+cat("The same thing is repeated with townhouses, but Connecticut has almost as many as Hawaii now. There is a possibility that the reasoning behind this is the same as Hawaii with the limited supply of land, but it also could be that mostly everywhere in Connecticut is close to a town or city that sports many amenities.")
 property_type_outlier_table(state_market.df, type = "Townhouse")
 ```
 
-#### The outliers are not as pronounced with the median list price
+#### The extreme outliers are not as pronounced with the median list price.
 
 ```{r}
 ggplot(state_market.df, aes(x = property_type, y = median_list_price)) +
@@ -181,12 +179,12 @@ ggplot(state_market.df, aes(x = property_type, y = median_list_price)) +
 ```
 
 ```{r, echo = FALSE}
-cat("California leads the US in most outliers for all residential house prices.")
+cat("California leads the US in most outliers for all residential house prices while Columbia and Hawaii are not far behind. Hawaii has the same reasoning for the listing price as what was explained above. California's outliers can be explained by the housing markets predictions that a huge demand for housing will always be present in the state. Columbia?")
 property_type_outlier_table(state_market.df, type = "All Residential", sale_price = FALSE)
 
-cat("New York leads the US in most outliers for condo/co-op house prices.")
+cat("New York leads the US in most outliers for condo/co-op house prices. New York will obviously lead in most outliers, since most people only live in condo's or cooperative housing in the state and the housing markets prediction of ever increasing demands of housing in places like New York City.")
 property_type_outlier_table(state_market.df, type = "Condo/Co-op", sale_price = FALSE)
 
-cat("California and Columbia leads the US in most outliers for single residential house prices.")
+cat("California and Columbia leads the US in most outliers for single residential house prices. California is the same as described above. Columbia?")
 property_type_outlier_table(state_market.df, type = "Single Family Residential", sale_price = FALSE)
 ```
