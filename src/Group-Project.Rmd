@@ -8,9 +8,9 @@ author: |
   | Johnathan Rich
 date: "2022-11-08"
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 header-includes: \usepackage{fvextra} \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 ---
 
@@ -146,7 +146,6 @@ ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
 ```
 
 ```{r, echo = FALSE}
-#
 property_type_outlier_table <- function(df, type, sale_price = TRUE){
   data <- with(df, df[property_type == type, ])
   
