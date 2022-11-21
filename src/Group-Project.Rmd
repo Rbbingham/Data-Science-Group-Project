@@ -19,7 +19,7 @@ header-includes: \usepackage{fvextra} \DefineVerbatimEnvironment{Highlighting}{V
 Our group, 5 little minds, have decided to look at real estate market data from 2012 to 2021 in order to predict future trends in the next 5 years. This data includes median list price for a given neighborhood in each state; median prices based upon housing unit categories, such as apartments, single-family housing, and condos; and year-to-year increases in sale prices of each unit.
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.align = 'center')
 ```
 
 ### Import the necessary libraries
@@ -37,7 +37,7 @@ library("scales")
 
 We decided to use the data from this url from Kaggle for our dataset:
 
-https://www.kaggle.com/datasets/thuynyle/redfin-housing-market-data?select=state_market_tracker.tsv000
+[kaggle](https://www.kaggle.com/datasets/thuynyle/redfin-housing-market-data?select=state_market_tracker.tsv000)
 
 ```{r}
 state_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t', header = TRUE)
@@ -45,7 +45,7 @@ state_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t',
 
 ### Data Manipulation
 
-Here, we have made R recognize  the variables in the dataset that pertain to specific days, (i.e, 9/21/2022) as actual dates using the built-in as.Date function. We have also divided the median sale price and list price of homes in each neighborhood by 1000 in order to  make the data more readable in subsequent graphs.
+Here, we have made R recognize the variables in the dataset that pertain to specific days, (i.e, 9/21/2022) as actual dates using the built-in as.Date function. We have also divided the median sale price and list price of homes in each neighborhood by 1000 in order to  make the data more readable in subsequent graphs.
 
 ```{r}
 state_market.df$period_begin <- as.Date(state_market.df$period_begin)
@@ -55,7 +55,9 @@ state_market.df$median_list_price <- state_market.df$median_list_price / 1000
 state_market.df$property_type[state_market.df$property_type == "Multi-Family (2-4 Unit)"] <- "Multi-Family"
 ```
 
-```{r, fig.align = 'center', fig.width = 12, fig.height = 10, warning = FALSE}
+Here, we created a boxplot graph for the median list price of the homes in each neighborhood in the dataset, with each boxplot representing . Hawaii and and Connecticut were had the highest number of outliers. Since there were more outliers above the boxplot than below it in both cases, we attributed these anomalies to the high cost of living in both states, Since Hawaii is a vacation destination and Connecticut is a New England state with a close proximity to New York City.
+
+```{r, fig.width = 12, fig.height = 10}
 split_by_year <- split(state_market.df, format(state_market.df$period_begin, "%Y"))
 
 ggplot(split_by_year[[length(split_by_year)]], aes(x = state_code, y = median_sale_price, color=median_sale_price)) +
@@ -79,7 +81,7 @@ print(
     + geom_histogram(
       colour="darkorchid4", fill="darkorchid1", position="identity", bins=30, alpha=0.2
     )
-    + ggtitle(paste("Frequency Distribution of median list price", sep=""))
+    + ggtitle(paste("Frequency Distribution of Median List Price", sep=""))
     + theme(plot.title=element_text(hjust = 0.5))
     + xlab("Median List Price of Each Neighboorhood")
     + ylab("Frequency of Neighborhoods")
@@ -94,28 +96,24 @@ print(
     + geom_histogram(
       colour="red", fill="firebrick1", position="identity", bins=30, alpha=0.2
     )
-    + ggtitle(paste("Frequency Distribution of median sale price", sep=""))
+    + ggtitle(paste("Frequency Distribution of Median Sale Price", sep=""))
     + theme(plot.title=element_text(hjust = 0.5))
     + xlab("Median Sale Price of Each Neighboorhood")
     + ylab("Frequency of Neighborhoods")
     + ylim(0, 12500))
 ```
 
-```{r, fig.align = 'center', warning = FALSE}
+```{r}
 cor.df <- subset.data.frame(state_market.df, select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy),  drop = FALSE)
 
 cor.table <- cor(cor.df, use="pairwise.complete.obs")
 
-rownames(cor.table) <- c("median sale price", "median list price", "median sale price year-on-year", "median list price year-on-year", "median sale ppsf", "median list ppsf", "homes sold year-old-year", "pending sales year-on-year", "new listings year-on-year", "inventory year-on-year")
-
-colnames(cor.table) <- c("median sale price", "median list price", "median sale price year-on-year", "median list price year-on-year", "median sale ppsf", "median list ppsf", "homes sold year-old-year", "pending sales year-on-year", "new listings year-on-year", "inventory year-on-year")
-
-matrix <- corrplot(cor.table)
-
 corrplot(cor.table)
 ```
 
-```{r, fig.align = 'center', fig.width = 12, fig.height = 10, warning = FALSE, message = FALSE}
+We can create a bin plot to demonstrate that home sale prices tend to aggregate below a million, between 100 thousand to 300 thousand. We have fitted a best fit line to show that there is a positive increase in median sales price over time, however, with a r-squared value of 0.125, only 12.5% of this increase can be explained by time. This is understandable, since the value of a home includes many factors such as: location, land, size, time built, etc.
+
+```{r, fig.width = 12, fig.height = 10}
 lm_eqn <- function(df){
     m <- lm(median_sale_price ~ as.yearmon(period_begin), df);
     eq <- substitute(italic(median_sale_price) == b %.% italic(period_begin) + a*","~~italic(r)^2~"="~r2, 
@@ -128,7 +126,7 @@ lm_eqn <- function(df){
 ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)) +
   geom_bin_2d(binwidth = c(1/12, 10)) +
   xlab("Time") +
-  ylab("Median Sales Price") +
+  ylab("Median Sales Price (in thousands)") +
   ggtitle("Median Sales Price over Time") +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_x_yearmon(n = 10) +
@@ -138,7 +136,7 @@ ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)
 
 #### Both townhouse and multi-family have extreme outliers in the median sales price
 
-```{r, fig.align = 'center', warning = FALSE}
+```{r}
 ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
   geom_boxplot(colour="#003366", fill="#66FFFF", alpha=1/2) +
   xlab("Property Type") +
@@ -174,7 +172,7 @@ property_type_outlier_table(state_market.df, type = "Townhouse")
 
 #### The outliers are not as pronounced with the median list price
 
-```{r, fig.align = 'center', warning = FALSE}
+```{r}
 ggplot(state_market.df, aes(x = property_type, y = median_list_price)) +
   geom_boxplot(colour="#003366", fill="#66FFFF", alpha=1/2) +
   xlab("Property Type") +
