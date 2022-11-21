@@ -1,59 +1,86 @@
 ---
-title: "GROUP PROJECT CSC 3220"
+title: "GROUP PROJECT CSC 3220 - Real Estate Data"
+author: |
+    | Robert Bingham
+    | Phonethep Nakhonekhong
+    | Eli Parker
+    | John Taylor
+    | Johnathan Rich
 output:
   pdf_document: default
+header-includes:
+  \usepackage{fvextra}
+  \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 date: "2022-11-08"
 ---
 
-### Load the Relevant Packages
-# --------------------------
-```{r, include=FALSE, warning=FALSE}
-library(ggplot2)
-library(DT)
-library(pander)
-library(corrplot)
-library(zoo)
-library(reshape)
+## Introduction
+
+Our group, 5 little minds, have decided to look at real estate market data from 2012 to 2021 in order to predict future trends in the next 5 years. This data includes median list price for a given neighborhood in each state; median prices based upon housing unit categories, such as apartments, single-family housing, and condos; and year-to-year increases in sale prices of each unit.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
+### Import the Data
 
-```{r, warning=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=56)}
+We decided to use the data from this url from Kaggle for our dataset:
+
+https://www.kaggle.com/datasets/thuynyle/redfin-housing-market-data?select=state_market_tracker.tsv000
+
+```{r}
 state_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t', header = TRUE)
 ```
 
-```{r, tidy=TRUE, tidy.opts=list(width.cutoff=56)}
-#new_state_market.df = subset(state_market.df, select = -c(period_duration, region_type_id, table_id, is_seasonally_adjusted, region_type, city, parent_metro_region_metro_code, price_drops, price_drops_mom, price_drops_yoy))
+### Import the necessary libraries
 
-#specific_date <- c("2017-12-31")
-#specific_date <- as.Date(specific_date, format = "%Y-%m-%d")
-
-#new_state_market.df = subset(new_state_market.df, period_begin > specific_date)
-``` 
-
-```{r, tidy=TRUE, tidy.opts=list(width.cutoff=56)}
-#dim(new_state_market.df)
-#renderDataTable({datatable(new_state_market.df, options=list(scrollX=TRUE))})
-#datatable(new_state_market.df, options=list(scrollX=TRUE))
-
+```{r}
+library("ggplot2")
+library("DT")
+library("pander")
+library("corrplot")
+library("zoo")
+library("reshape")
+library("scales")
 ```
 
-```{r, fig.width = 12, fig.height = 10, tidy=TRUE, tidy.opts=list(width.cutoff=56)}
+### Data Manipulation
+
+Here, we have made R recognize  the variables in the dataset that pertain to specific days, (i.e, 9/21/2022) as actual dates using the built-in as.Date function. We have also divided the median sale price and list price of homes in each neighborhood by 1000 in order to  make the data more readable in subsequent graphs.
+
+```{r}
 state_market.df$period_begin <- as.Date(state_market.df$period_begin)
-split_by_year <- split(state_market.df, format(state_market.df$period_begin, "%Y"))
-
-lapply(split_by_year, function(i) ggplot(i, aes(x = state_code, y = median_sale_price, color=median_sale_price))
-                                  + geom_boxplot(colour="firebrick1", fill="orange", alpha=5)
-                                  + geom_point() 
-                                  + xlab(format(i$period_begin, "%Y"))
-                                  + ylab("Median Sales Price")
-                                  + scale_y_continuous(labels = function(x) format(x, scientific = TRUE)))
+state_market.df$period_end <- as.Date(state_market.df$period_end)
+state_market.df$median_sale_price <- state_market.df$median_sale_price / 1000
+state_market.df$median_list_price <- state_market.df$median_list_price / 1000
 ```
 
-```{r, tidy=TRUE, tidy.opts=list(width.cutoff=56)}
+Here, we separated the data into categorical and numeric variables. We decided that the state is a categorical variable, and that the prices, increase in prices, and the dates were numeric variables.
+
+```{r, fig.width = 12, fig.height = 10}
+state_market.df$period_begin <- as.Date(state_market.df$period_begin)
+
+variables <- colnames(state_market.df)
+numeric_vars <- variables[c(-1,-48)]
+categorical_vars <- variables[c(1)]
+```
+
+
+
+```{r, fig.width = 12, fig.height = 10}
+split_by_year <- split(state_market.df, format(state_market.df$period_begin, "%Y"))
+ggplot(split_by_year[[length(split_by_year)]], aes(x = state_code, y = median_sale_price, color=median_sale_price)) +
+  geom_boxplot(colour="#003366", fill="#66FFFF", alpha=5) +
+  geom_point() +
+  xlab("2021") +
+  ylab("Median Sales Price")
+```
+
+```{r}
 mean_years <- data.frame(state_market.df$period_begin, state_market.df$median_sale_price_yoy, state_market.df$state)
 ```
 
-```{r, tidy=TRUE, tidy.opts=list(width.cutoff=56)}
+```{r}
 new_df <- subset.data.frame(state_market.df, select = c(state_code, median_list_price, median_sale_price),  drop = FALSE)
 
 print(
@@ -72,9 +99,8 @@ print(
     + theme(plot.title=element_text(hjust = 0.5)))
 ```
 
-```{r, tidy=TRUE, tidy.opts=list(width.cutoff=56)}
+```{r}
 cor.df <- subset.data.frame(state_market.df, select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy),  drop = FALSE)
-
 
 cor.table <- cor(cor.df, use="pairwise.complete.obs")
 
@@ -87,7 +113,8 @@ matrix <- corrplot(cor.table)
 corrplot(cor.table)
 ```
 
-```{r, fig.width = 12, fig.height = 10, tidy=TRUE, tidy.opts=list(width.cutoff=56)}
+
+```{r}
 data_median_salemedian_list <- data.frame(state_market.df[, c("median_sale_price", "median_list_price")])
 
 data_median_salemedian_list$refseq <- c("median_sale_price", "median_list_price")
@@ -95,6 +122,9 @@ s.plot <- melt(data_median_salemedian_list)
 
 ggplot(s.plot, aes(x = value, colour = variable, fill = variable)) + geom_density(alpha = 0.1)
 
+```
+
+```{r, fig.width = 12, fig.height = 10}
 lm_eqn <- function(df){
     m <- lm(median_sale_price ~ as.yearmon(period_begin), df);
     eq <- substitute(italic(median_sale_price) == b %.% italic(period_begin) + a*","~~italic(r)^2~"="~r2, 
@@ -105,11 +135,30 @@ lm_eqn <- function(df){
 }
 
 ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)) +
-                        geom_bin_2d(binwidth = c(1/12, 10000)) +
-                        xlab("Time") +
-                        ylab("Median Sales Price") +
-                        scale_x_yearmon(n = 10) +
-                        geom_smooth(method = "lm", se = FALSE, color = "red") +
-                        annotate("text", x = as.numeric(as.yearmon("2014-06-01")), y = 3e+06, parse = TRUE, label = lm_eqn(state_market.df))
+  geom_bin_2d(binwidth = c(1/12, 10)) +
+  xlab("Time") +
+  ylab("Median Sales Price") +
+  ggtitle("Median Sales Price vs Time") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_x_yearmon(n = 10) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  annotate("text", x = as.numeric(as.yearmon("2014-06-01")), y = 3000, parse = TRUE, label = lm_eqn(state_market.df))
 ```
 
+```{r}
+ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
+  geom_boxplot(colour="#003366", fill="#66FFFF", alpha=1/2) +
+  xlab("Property Type") +
+  ylab("Median Sales Price")
+```
+
+```{r, fig.width = 12, fig.height = 12}
+state_market.df$period_begin <- as.Date(state_market.df$period_begin)
+split_by_year <- split(state_market.df, format(state_market.df$period_begin, "%Y"))
+
+lapply(split_by_year, function(i) ggplot(i, aes(x = state_code, y = median_sale_price))
+                                  + geom_point() 
+                                  + xlab(format(i$period_begin, "%Y"))
+                                  + ylab("Median Sales Price")
+                                  + scale_y_continuous(labels = function(x) format(x, scientific = TRUE)))
+```
