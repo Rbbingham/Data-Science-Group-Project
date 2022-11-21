@@ -8,9 +8,9 @@ author: |
   | Johnathan Rich
 date: "2022-11-08"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 header-includes: \usepackage{fvextra} \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 ---
 
@@ -128,18 +128,28 @@ ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
 ```
 
 ```{r, echo = FALSE}
+#
+property_type_outlier_table <- function(df, type, sale_price = TRUE){
+  data <- with(df, df[property_type == type, ])
+  
+  if(sale_price){
+    upper_bound <- quantile(data$median_sale_price, 0.99, na.rm = TRUE)
+    outlier_indices <- which(data$median_sale_price > upper_bound)
+  }
+  else{
+    upper_bound <- quantile(data$median_list_price, 0.99, na.rm = TRUE)
+    outlier_indices <- which(data$median_list_price > upper_bound)
+  }
+  
+  print(table(data$region[outlier_indices]))
+}
+
 cat("For our outlier tests, we will test if anything is above the 99th quantile.
 We can see that for the outliers for multi-family housing the state Hawaii has the most outliers.")
-multi_family <- with(state_market.df, state_market.df[property_type == "Multi-Family", ])
-upper_bound <- quantile(multi_family$median_sale_price, 0.99, na.rm = TRUE)
-outlier_indices <- which(multi_family$median_sale_price > upper_bound)
-table(multi_family$region[outlier_indices])
+property_type_outlier_table(state_market.df, type = "Multi-Family")
 
 cat("The same thing is repeated with townhouses, but Connecticut has one less Hawaii.")
-townhouse <- with(state_market.df, state_market.df[property_type == "Townhouse", ])
-upper_bound <- quantile(townhouse$median_sale_price, 0.99, na.rm = TRUE)
-outlier_indices <- which(townhouse$median_sale_price > upper_bound)
-table(townhouse$region[outlier_indices])
+property_type_outlier_table(state_market.df, type = "Townhouse")
 ```
 
 #### The outliers are not as pronounced with the median list price
@@ -155,20 +165,11 @@ ggplot(state_market.df, aes(x = property_type, y = median_list_price)) +
 
 ```{r, echo = FALSE}
 cat("California leads the US in most outliers for all residential house prices.")
-residential <- with(state_market.df, state_market.df[property_type == "All Residential", ])
-upper_bound <- quantile(residential$median_list_price, 0.99, na.rm = TRUE)
-outlier_indices <- which(residential$median_list_price > upper_bound)
-table(residential$region[outlier_indices])
+property_type_outlier_table(state_market.df, type = "All Residential", sale_price = FALSE)
 
 cat("New York leads the US in most outliers for condo/co-op house prices.")
-condo_coop <- with(state_market.df, state_market.df[property_type == "Condo/Co-op", ])
-upper_bound <- quantile(condo_coop$median_list_price, 0.99, na.rm = TRUE)
-outlier_indices <- which(condo_coop$median_list_price > upper_bound)
-table(condo_coop$region[outlier_indices])
+property_type_outlier_table(state_market.df, type = "Condo/Co-op", sale_price = FALSE)
 
 cat("California and Columbia leads the US in most outliers for single residential house prices.")
-single_family <- with(state_market.df, state_market.df[property_type == "Single Family Residential", ])
-upper_bound <- quantile(single_family$median_list_price, 0.99, na.rm = TRUE)
-outlier_indices <- which(single_family$median_list_price > upper_bound)
-table(single_family$region[outlier_indices])
+property_type_outlier_table(state_market.df, type = "Single Family Residential", sale_price = FALSE)
 ```
