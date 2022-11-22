@@ -70,7 +70,10 @@ Out of the 48 variables in the dataset, these are the ones we will consider (the
 * median list price year-on-year - **Year-to-year percentage increase in median list price of each neighborbood**
 * median sale ppsf - **Median sale price per-square-foot of each neighborhood**
 * median list ppsf - **Median sale price per-square-foot of each neighborhood**
-* median 
+* homes sold year-old-year - **Increase in number of homes sold in each neighborhood year-on-year**
+* pending sales year-on-year - **Increase in number of pending sales in each neighborhood year-on-year**
+* new listings year-on-year - **Increase in number of new listings in each neighborhood year-on-year**
+* inventory year-on-year - **Increase in number of all listings in each neighborhood year-on-year**
 
 ```{r, fig.width = 12, fig.height = 10}
 state_market.df$period_begin <- as.Date(state_market.df$period_begin)
@@ -130,8 +133,9 @@ print(
     + ylab("Frequency of Neighborhoods")
     + ylim(0, 12500))
 ```
+\newpage
 
-We created a correlation matrix with
+We created a correlation matrix with our important variables. We expected a strong positive correlation between median sale price and median list price, and an even stronger correlation between median sale price and median price-per-square-foot, but a feature that surprised us was that there was a modest negative correlation between median list price year-on-year and the pending sales year-on-year, which directly contradicts the basic supply-and-demand principle. However, we believe we can attribute this to people being less likely to buy a house if the house is more expensive.
 
 
 ```{r}
@@ -148,7 +152,9 @@ matrix <- corrplot(cor.table)
 corrplot(cor.table)
 ```
 
+\newpage
 
+We can create a bin plot to demonstrate that home sale prices tend to aggregate below a million, between 100 thousand to 300 thousand. We have fitted a best fit line to show that there is a positive increase in median sales price over time, however, with a r-squared value of 0.125, only 12.5% of this increase can be explained by time. This is understandable, since the value of a home includes many factors such as: location, land, size, time built, etc. We can see that both  the townhouse and multi-family units have extreme outliers in the median sales price.
 
 ```{r, fig.width = 12, fig.height = 10}
 lm_eqn <- function(df){
@@ -175,8 +181,35 @@ ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)
 ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
   geom_boxplot(colour="#003366", fill="#66FFFF", alpha=1/2) +
   xlab("Property Type") +
-  ylab("Median Sales Price")
+  ylab("Median Sales Price (in thousands)") +
+  ggtitle("Property Type vs Median Sales Price") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
+
+
+
+```{r, echo = FALSE}
+property_type_outlier_table <- function(df, type, sale_price = TRUE){
+  data <- with(df, df[property_type == type, ])
+  
+  if(sale_price){
+    upper_bound <- quantile(data$median_sale_price, 0.99, na.rm = TRUE)
+    outlier_indices <- which(data$median_sale_price > upper_bound)
+  }
+  else{
+    upper_bound <- quantile(data$median_list_price, 0.99, na.rm = TRUE)
+    outlier_indices <- which(data$median_list_price > upper_bound)
+  }
+  
+  print(table(data$region[outlier_indices]))
+}
+cat("For our outlier tests, we will test if anything is above the 99th quantile. We can see that for the outliers for multi-family housing the state Hawaii has the most outliers. This gives us a good explanation in the reason for the outliers, since Hawaii is a small state in the middle of the Pacific serverely limiting the supply of land.")
+property_type_outlier_table(state_market.df, type = "Multi-Family")
+cat("The same thing is repeated with townhouses, but Connecticut has almost as many as Hawaii now. There is a possibility that the reasoning behind this is the same as Hawaii with the limited supply of land, but it also could be that mostly everywhere in Connecticut is close to a town or city that sports many amenities.")
+property_type_outlier_table(state_market.df, type = "Townhouse")
+```
+
+
 
 ## Conclusion
 
