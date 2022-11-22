@@ -157,6 +157,7 @@ corrplot(cor.table)
 We can create a bin plot to demonstrate that home sale prices tend to aggregate below a million, between 100 thousand to 300 thousand. We have fitted a best fit line to show that there is a positive increase in median sales price over time, however, with a r-squared value of 0.125, only 12.5% of this increase can be explained by time. This is understandable, since the value of a home includes many factors such as: location, land, size, time built, etc. We can see that both  the townhouse and multi-family units have extreme outliers in the median sales price.
 
 ```{r, fig.width = 12, fig.height = 10}
+
 lm_eqn <- function(df){
     m <- lm(median_sale_price ~ as.yearmon(period_begin), df);
     eq <- substitute(italic(median_sale_price) == b %.% italic(period_begin) + a*","~~italic(r)^2~"="~r2, 
@@ -233,11 +234,11 @@ property_type_outlier_table(state_market.df, type = "Single Family Residential",
 
 ## Conclusion
 
-
+We are going to use linear regression to predict the median sale price of different housing units in 5 years. Since our R^2 is low in the binplot equation, we know that our data is noisy so we must condense this data into a single variable called the yearly mean for all homes sold that year. We can see from the same graph, however, that there is a linear trend, and for this reason we believe we can predict future rates accurately using this method, especially if we break the data into separate chunks, i.e., housing unit types.  
 
 \newpage
 
-## Sample Data Table
+## Sample Data
 
 ```{r}
 sample.df <- subset.data.frame(state_market.df, select = c(period_begin, state_code, property_type, median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy),  drop = FALSE)
