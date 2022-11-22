@@ -1,17 +1,17 @@
 ---
 title: "EXPLORATORY DATA ANALYSIS CSC 3220 - Real Estate Data"
 author: |
-    | Robert Bingham
-    | Phonethep Nakhonekhong
-    | Eli Parker
-    | John Taylor
-    | Johnathan Rich
+  | Robert Bingham
+  | Phonethep Nakhonekhong
+  | Eli Parker
+  | John Taylor
+  | Johnathan Rich
+date: "2022-11-08"
 output:
   pdf_document: default
-header-includes:
-  \usepackage{fvextra}
-  \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
-date: "2022-11-08"
+  html_document:
+    df_print: paged
+header-includes: \usepackage{fvextra} \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 ---
 
 ## Introduction
@@ -26,16 +26,6 @@ For the purposes of this assignment, were are turning off all warnings and cente
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.align = 'center')
 ```
 
-### Import the Data
-
-We decided to use the data from this url from Kaggle for our dataset:
-
-https://www.kaggle.com/datasets/thuynyle/redfin-housing-market-data?select=state_market_tracker.tsv000
-
-```{r}
-state_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t', header = TRUE)
-```
-
 ### Import the necessary libraries
 
 ```{r}
@@ -46,6 +36,16 @@ library("corrplot")
 library("zoo")
 library("reshape")
 library("scales")
+```
+
+### Import the Data
+
+We decided to use the data from this url from Kaggle for our dataset:
+
+https://www.kaggle.com/datasets/thuynyle/redfin-housing-market-data?select=state_market_tracker.tsv000
+
+```{r}
+state_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t', header = TRUE)
 ```
 
 ### Data Manipulation
@@ -72,14 +72,6 @@ Out of the 48 variables in the dataset, these are the ones we will consider (the
 * median list ppsf - **Median sale price per-square-foot of each neighborhood**
 * median 
 
-```{r, fig.width = 12, fig.height = 10}
-state_market.df$period_begin <- as.Date(state_market.df$period_begin)
-
-variables <- colnames(state_market.df)
-numeric_vars <- variables[c(-1,-48)]
-categorical_vars <- variables[c(1)]
-```
-
 Here, we created a boxplot graph for the median list price of the homes in each neighborhood in the dataset in the year 2021, with each boxplot representing each state. Hawaii and and Connecticut were had the highest number of outliers. Since there were more outliers above the boxplot than below it in both cases, we attributed these anomalies to the high cost of living in both states, Since Hawaii is a vacation destination and Connecticut is a New England state with a close proximity to New York City. We can also assume that the states that have a lower overall median sale price also have more consistent prices since boxplots such as Oklahoma and Ohio have a much lower variance and standard deviation than states with higher medians.
 
 ```{r, fig.align = 'center', fig.width = 12, fig.height = 10}
@@ -95,7 +87,6 @@ ggplot(split_by_year[[length(split_by_year)]], aes(x = state_code, y = median_sa
 \newpage
 
 ## Interpreting the Data
-
 
 We created 2 histograms. One is for the median list price of housing units in each of the 27,054 neighborhoods from 2012 to 2021. The other is the median sale price of  over the same length of time. We noticed that both graphs are skewed to the right, so we can assume that there are more homes sold and listed above the overall median home price than below it in the U.S. We also noticed that there is much less variance in the sale price than in the list price, with the right skew in the list price being much less pronounced in the list price than the sale price. Therefore, we can assume that if the asking/list price is higher than the median, the seller receives less in the final sale price in most cases.
 
@@ -116,8 +107,6 @@ print(
     + ylim(0, 12500))
 ```
 
-
-
 ```{r}
 print(
     ggplot(new_df, aes_string(x=new_df$median_sale_price))
@@ -132,7 +121,6 @@ print(
 ```
 
 We created a correlation matrix with
-
 
 ```{r}
 cor.df <- subset.data.frame(state_market.df, select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy),  drop = FALSE)
@@ -178,6 +166,79 @@ ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
   ylab("Median Sales Price")
 ```
 
+```{r, echo = FALSE}
+property_type_outlier_table <- function(df, type, sale_price = TRUE){
+  data <- with(df, df[property_type == type, ])
+  
+  if(sale_price){
+    upper_bound <- quantile(data$median_sale_price, 0.99, na.rm = TRUE)
+    outlier_indices <- which(data$median_sale_price > upper_bound)
+  }
+  else{
+    upper_bound <- quantile(data$median_list_price, 0.99, na.rm = TRUE)
+    outlier_indices <- which(data$median_list_price > upper_bound)
+  }
+  
+  print(table(data$region[outlier_indices]))
+}
+cat("For our outlier tests, we will test if anything is above the 99th quantile. We can see
+that for the outliers for multi-family housing the state Hawaii has the most outliers. This
+gives us a good explanation in the reason for the outliers, since Hawaii is a small state
+in the middle of the Pacific serverely limiting the supply of land.")
+
+property_type_outlier_table(state_market.df, type = "Multi-Family")
+
+cat("The same thing is repeated with townhouses, but Connecticut has almost as many as Hawaii
+now. There is a possibility that the reasoning behind this is the same as Hawaii with the
+limited supply of land, but it also could be that mostly everywhere in Connecticut is close 
+to a town or city that sports many amenities.")
+
+property_type_outlier_table(state_market.df, type = "Townhouse")
+```
+
+#### The extreme outliers are not as pronounced with the median list price.
+
+```{r}
+ggplot(state_market.df, aes(x = property_type, y = median_list_price)) +
+  geom_boxplot(colour="#003366", fill="#66FFFF", alpha=1/2) +
+  xlab("Property Type") +
+  ylab("Median Sales Price (in thousands)") +
+  ggtitle("Property Type vs Median List Price") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r, echo = FALSE}
+cat("California leads the US in most outliers for all residential house prices while Columbia
+and Hawaii are not far behind. Hawaii has the same reasoning for the listing price as what
+was explained above. California's outliers can be explained by the housing markets 
+predictions that a huge demand for housing will always be present in the state. Columbia has
+a low supply compared to the high demand in the housing market.")
+
+property_type_outlier_table(state_market.df, type = "All Residential", sale_price = FALSE)
+
+cat("New York leads the US in most outliers for condo/co-op house prices. New York will 
+obviously lead in most outliers, since most people only live in condo's or cooperative 
+housing in the state and the housing markets prediction of ever increasing demands of housing
+in places like New York City.")
+
+property_type_outlier_table(state_market.df, type = "Condo/Co-op", sale_price = FALSE)
+
+cat("California and Columbia leads the US in most outliers for single residential house prices.
+California is the same as described above. Columbia has a low supply compared to the high demand
+in the housing market.")
+
+property_type_outlier_table(state_market.df, type = "Single Family Residential", sale_price = FALSE)
+```
+
 ## Conclusion
 
 Using the 
+
+\newpage 
+
+```{r}
+sample.df <- subset.data.frame(state_market.df, select = c(period_begin, state_code, property_type, median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy),  drop = FALSE)
+
+pander(head(sample.df))
+```
+
