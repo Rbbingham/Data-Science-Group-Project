@@ -8,9 +8,9 @@ author: |
   | Johnathan Rich
 date: "2022-11-08"
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 header-includes: \usepackage{fvextra} \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 ---
 
@@ -60,8 +60,6 @@ state_market.df$median_list_price <- state_market.df$median_list_price / 1000
 state_market.df$property_type[state_market.df$property_type == "Multi-Family (2-4 Unit)"] <- "Multi-Family"
 ```
 
-Here, we separate the data into categorical and numeric variables. We decided that the state is a categorical variable, and that the prices, increase in prices, and the dates were numeric variables.
-
 Out of the 48 variables in the dataset, these are the ones we will consider (the important variables) in our subsequent exploratory analysis:
 
 * median sale price - **Median sale price the housing units of each of the 27,054 neighborhoods**
@@ -71,6 +69,8 @@ Out of the 48 variables in the dataset, these are the ones we will consider (the
 * median sale ppsf - **Median sale price per-square-foot of each neighborhood**
 * median list ppsf - **Median sale price per-square-foot of each neighborhood**
 * median 
+
+\newpage
 
 Here, we created a boxplot graph for the median list price of the homes in each neighborhood in the dataset in the year 2021, with each boxplot representing each state. Hawaii and and Connecticut were had the highest number of outliers. Since there were more outliers above the boxplot than below it in both cases, we attributed these anomalies to the high cost of living in both states, Since Hawaii is a vacation destination and Connecticut is a New England state with a close proximity to New York City. We can also assume that the states that have a lower overall median sale price also have more consistent prices since boxplots such as Oklahoma and Ohio have a much lower variance and standard deviation than states with higher medians.
 
@@ -120,6 +120,8 @@ print(
     + ylim(0, 12500))
 ```
 
+\newpage
+
 We created a correlation matrix with
 
 ```{r}
@@ -136,7 +138,9 @@ matrix <- corrplot(cor.table)
 corrplot(cor.table)
 ```
 
+\newpage
 
+We can create a bin plot to demonstrate that home sale prices tend to aggregate below a million, between 100 thousand to 300 thousand. We have fitted a best fit line to show that there is a positive increase in median sales price over time, however, with a r-squared value of 0.125, only 12.5% of this increase can be explained by time. This is understandable, since the value of a home includes many factors such as: location, land, size, time built, etc.
 
 ```{r, fig.width = 12, fig.height = 10}
 lm_eqn <- function(df){
@@ -158,6 +162,10 @@ ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)
   geom_smooth(method = "lm", se = FALSE, color = "red") +
   annotate("text", x = as.numeric(as.yearmon("2014-06-01")), y = 3000, parse = TRUE, label = lm_eqn(state_market.df))
 ```
+
+\newpage
+
+#### Both townhouse and multi-family have extreme outliers in the median sales price.
 
 ```{r}
 ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
