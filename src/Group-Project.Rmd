@@ -176,6 +176,9 @@ ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)
   geom_smooth(method = "lm", se = FALSE, color = "red") +
   annotate("text", x = as.numeric(as.yearmon("2014-06-01")), y = 3000, parse = TRUE, label = lm_eqn(state_market.df))
 ```
+\newpage
+
+Below, we have created 2 boxplots for the types of housing units. One for the median sale price, the other for the median list price.
 
 ```{r}
 ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
@@ -185,7 +188,6 @@ ggplot(state_market.df, aes(x = property_type, y = median_sale_price)) +
   ggtitle("Property Type vs Median Sales Price") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
-
 
 
 ```{r, echo = FALSE}
@@ -209,8 +211,37 @@ cat("The same thing is repeated with townhouses, but Connecticut has almost as m
 property_type_outlier_table(state_market.df, type = "Townhouse")
 ```
 
+Below, we can see that the extreme outliers are not as pronounced with the median list price.
 
+```{r}
+ggplot(state_market.df, aes(x = property_type, y = median_list_price)) +
+  geom_boxplot(colour="#003366", fill="#66FFFF", alpha=1/2) +
+  xlab("Property Type") +
+  ylab("Median Sales Price (in thousands)") +
+  ggtitle("Property Type vs Median List Price") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r, echo = FALSE}
+cat("California leads the US in most outliers for all residential house prices while Columbia and Hawaii are not far behind. Hawaii has the same reasoning for the listing price as what was explained above. California's outliers can be explained by the housing markets predictions that a huge demand for housing will always be present in the state. Columbia?")
+property_type_outlier_table(state_market.df, type = "All Residential", sale_price = FALSE)
+cat("New York leads the US in most outliers for condo/co-op house prices. New York will obviously lead in most outliers, since most people only live in condo's or cooperative housing in the state and the housing markets prediction of ever increasing demands of housing in places like New York City.")
+property_type_outlier_table(state_market.df, type = "Condo/Co-op", sale_price = FALSE)
+cat("California and Columbia leads the US in most outliers for single residential house prices. California is the same as described above. Columbia?")
+property_type_outlier_table(state_market.df, type = "Single Family Residential", sale_price = FALSE)
+```
 
 ## Conclusion
 
-Using the 
+
+
+\newpage
+
+## Sample Data Table
+
+```{r}
+sample.df <- subset.data.frame(state_market.df, select = c(period_begin, state_code, property_type, median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy),  drop = FALSE)
+
+pander(head(sample.df))
+```
+
