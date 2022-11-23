@@ -196,9 +196,19 @@ property_type_outlier_table <- function(df, type, sale_price = TRUE){
   
   print(table(data$region[outlier_indices]))
 }
-cat("For our outlier tests, we will test if anything is above the 99th quantile. We can see that for the outliers for multi-family housing the state Hawaii has the most outliers. This gives us a good explanation in the reason for the outliers, since Hawaii is a small state in the middle of the Pacific serverely limiting the supply of land.")
+
+cat("For our outlier tests, we will test if anything is above the 99th quantile. We can see
+that for the outliers for multi-family housing the state Hawaii has the most outliers. This
+gives us a good explanation in the reason for the outliers, since Hawaii is a small state
+in the middle of the Pacific serverely limiting the supply of land.")
+
 property_type_outlier_table(state_market.df, type = "Multi-Family")
-cat("The same thing is repeated with townhouses, but Connecticut has almost as many as Hawaii now. There is a possibility that the reasoning behind this is the same as Hawaii with the limited supply of land, but it also could be that mostly everywhere in Connecticut is close to a town or city that sports many amenities.")
+
+cat("The same thing is repeated with townhouses, but Connecticut has almost as many as Hawaii
+now. There is a possibility that the reasoning behind this is the same as Hawaii with the
+limited supply of land, but it also could be that mostly everywhere in Connecticut is close 
+to a town or city that sports many amenities.")
+
 property_type_outlier_table(state_market.df, type = "Townhouse")
 ```
 
@@ -214,17 +224,31 @@ ggplot(state_market.df, aes(x = property_type, y = median_list_price)) +
 ```
 
 ```{r, echo = FALSE}
-cat("California leads the US in most outliers for all residential house prices while Columbia and Hawaii are not far behind. Hawaii has the same reasoning for the listing price as what was explained above. California's outliers can be explained by the housing markets predictions that a huge demand for housing will always be present in the state. Columbia?")
+cat("California leads the US in most outliers for all residential house prices while Columbia
+and Hawaii are not far behind. Hawaii has the same reasoning for the listing price as what
+was explained above. California's outliers can be explained by the housing markets 
+predictions that a huge demand for housing will always be present in the state. Columbia has
+a low supply compared to the high demand in the housing market.")
+
 property_type_outlier_table(state_market.df, type = "All Residential", sale_price = FALSE)
-cat("New York leads the US in most outliers for condo/co-op house prices. New York will obviously lead in most outliers, since most people only live in condo's or cooperative housing in the state and the housing markets prediction of ever increasing demands of housing in places like New York City.")
+
+cat("New York leads the US in most outliers for condo/co-op house prices. New York will 
+obviously lead in most outliers, since most people only live in condo's or cooperative 
+housing in the state and the housing markets prediction of ever increasing demands of housing
+in places like New York City.")
+
 property_type_outlier_table(state_market.df, type = "Condo/Co-op", sale_price = FALSE)
-cat("California and Columbia leads the US in most outliers for single residential house prices. California is the same as described above. Columbia?")
+
+cat("California and Columbia leads the US in most outliers for single residential house prices.
+California is the same as described above. Columbia has a low supply compared to the high demand
+in the housing market.")
+
 property_type_outlier_table(state_market.df, type = "Single Family Residential", sale_price = FALSE)
 ```
 
 ## Conclusion
 
-We are going to use linear regression to predict the median sale price of different housing units in 5 years. Since our R^2 is low in the binplot equation, we know that our data is noisy so we must condense this data into a single variable called the yearly mean for all homes sold that year. We can see from the same graph, however, that there is a linear trend, and for this reason we believe we can predict future rates accurately using this method, especially if we break the data into separate chunks, i.e., housing unit types.  
+We are going to use linear regression to predict the median sale price of different housing units in 5 years. Since our R^2 is low in the binplot equation, we know that only 12.5% of the  independent variable (median sales price) can be explained through time. We can see that this is a small, but reliable relationship. For us to predict future house prices accurately, we will need to account for other factors that are outside the scope of this dataset; however, we may be able to predict a lower or upper bound or a relative area that future house prices might fall into. Either way, we can confidently confirm that the future housing market will be costlier that the current one.
 
 \newpage
 
