@@ -127,15 +127,17 @@ print(
 We created a correlation matrix with our important variables. We expected a strong positive correlation between median sale price and median list price, and an even stronger correlation between median sale price and median price-per-square-foot, but a feature that surprised us was that there was a modest negative correlation between median list price year-on-year and the pending sales year-on-year, which directly contradicts the basic supply-and-demand principle. However, we believe we can attribute this to people being less likely to buy a house if the house is more expensive.
 
 ```{r}
-cor.df <- subset.data.frame(state_market.df, select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy,sold_above_list_yoy,avg_sale_to_list_yoy),  drop = FALSE)
 
-cor.df <- subset.data.frame(cor.df, property_type="Single Family Residential")
+cor.df <- subset(state_market.df, state_code == 'CA')
+
+cor.df <- subset.data.frame(cor.df,  select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy,sold_above_list_yoy,avg_sale_to_list_yoy))
 
 cor.table <- cor(cor.df, use="pairwise.complete.obs")
 
 corrplot(cor.table, type="upper")
 ```
 \newpage
+
 ```{r}
 
 variables <- colnames(cor.df)
@@ -160,6 +162,15 @@ par(mfrow=c(2,2))
 plot(model2)
 ```
 
+```{r}
+
+model2 <- lm(
+  pending_sales_yoy~inventory_yoy+new_listings_yoy, cor.df[numeric_vars]
+)
+
+summary(model2)
+```
+
 \newpage
 
 ```{r}
@@ -175,11 +186,6 @@ summary(model4)
 plot(model4)
 ```
 \newpage
-
-```{r}
-cor.table <- cor(df2, use="pairwise.complete.obs")
-corrplot(cor.table, type="upper")
-```
 
 We can create a bin plot to demonstrate that home sale prices tend to aggregate below a million, between 100 thousand to 300 thousand. We have fitted a best fit line to show that there is a positive increase in median sales price over time, however, with a r-squared value of 0.125, only 12.5% of this increase can be explained by time. This is understandable, since the value of a home includes many factors such as: location, land, size, time built, etc. We can see that both  the townhouse and multi-family units have extreme outliers in the median sales price.
 
