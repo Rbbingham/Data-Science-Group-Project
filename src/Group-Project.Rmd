@@ -8,9 +8,9 @@ author: |
   | Johnathan Rich
 date: "2022-11-08"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 header-includes: \usepackage{fvextra} \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 ---
 
@@ -36,6 +36,7 @@ library("corrplot")
 library("zoo")
 library("reshape")
 library("scales")
+library("tidyverse")
 ```
 
 ### Import the Data
@@ -126,20 +127,59 @@ print(
 We created a correlation matrix with our important variables. We expected a strong positive correlation between median sale price and median list price, and an even stronger correlation between median sale price and median price-per-square-foot, but a feature that surprised us was that there was a modest negative correlation between median list price year-on-year and the pending sales year-on-year, which directly contradicts the basic supply-and-demand principle. However, we believe we can attribute this to people being less likely to buy a house if the house is more expensive.
 
 ```{r}
-cor.df <- subset.data.frame(state_market.df, select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy),  drop = FALSE)
+cor.df <- subset.data.frame(state_market.df, select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy,sold_above_list_yoy,avg_sale_to_list_yoy),  drop = FALSE)
+
+cor.df <- subset.data.frame(cor.df, property_type="Single Family Residential")
 
 cor.table <- cor(cor.df, use="pairwise.complete.obs")
 
-rownames(cor.table) <- c("median sale price", "median list price", "median sale price year-on-year", "median list price year-on-year", "median sale ppsf", "median list ppsf", "homes sold year-old-year", "pending sales year-on-year", "new listings year-on-year", "inventory year-on-year")
+corrplot(cor.table, type="upper")
+```
+\newpage
+```{r}
 
-colnames(cor.table) <- c("median sale price", "median list price", "median sale price year-on-year", "median list price year-on-year", "median sale ppsf", "median list ppsf", "homes sold year-old-year", "pending sales year-on-year", "new listings year-on-year", "inventory year-on-year")
+variables <- colnames(cor.df)
+numeric_vars <- variables[c(-0,-11)]
+pander(numeric_vars)
 
-matrix <- corrplot(cor.table)
-
-corrplot(cor.table)
 ```
 
 \newpage
+```{r}
+
+model2 <- lm(
+  pending_sales_yoy~inventory_yoy+new_listings_yoy, cor.df[numeric_vars]
+)
+
+summary(model2)
+```
+
+
+```{r}
+par(mfrow=c(2,2))
+plot(model2)
+```
+
+\newpage
+
+```{r}
+sample_size <- nrow(cor.df)
+mod <- lm(pending_sales_yoy~new_listings_yoy+inventory_yoy, cor.df[numeric_vars])
+cooksd <- cooks.distance(mod)
+influential <- as.numeric(names(cooksd)[(cooksd > (4/sample_size))])
+df2 <- cor.df[-influential, ]
+model4 <- lm(pending_sales_yoy~new_listings_yoy+inventory_yoy, df2[numeric_vars])
+par(mfrow=c(2,2))
+
+summary(model4)
+plot(model4)
+```
+\newpage
+
+```{r}
+cor.table <- cor(df2, use="pairwise.complete.obs")
+corrplot(cor.table, type="upper")
+```
 
 We can create a bin plot to demonstrate that home sale prices tend to aggregate below a million, between 100 thousand to 300 thousand. We have fitted a best fit line to show that there is a positive increase in median sales price over time, however, with a r-squared value of 0.125, only 12.5% of this increase can be explained by time. This is understandable, since the value of a home includes many factors such as: location, land, size, time built, etc. We can see that both  the townhouse and multi-family units have extreme outliers in the median sales price.
 
@@ -167,6 +207,7 @@ ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)
 \newpage
 
 Below, we have created 2 boxplots for the types of housing units. One for the median sale price, the other for the median list price.
+
 
 #### Both townhouse and multi-family have extreme outliers in the median sales price.
 
