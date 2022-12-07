@@ -51,7 +51,7 @@ state_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t',
 
 ### Data Manipulation
 
-Here, we have made R recognize  the variables in the dataset that pertain to specific days, (i.e, 9/21/2022) as actual dates using the built-in as.Date function. We have also divided the median sale price and list price of homes in each neighborhood by 1000 in order to  make the data more readable in subsequent graphs.
+Here, we have made R recognize  the variables in the dataset that pertain to specific days, (i.e, 9/21/2022) as actual dates using the built-in as.Date function. We have also divided the median sale price and list price of homes in each neighborhood by 1000 in order to  make the data more readable in subsequent graphs. There is no missing values in the dataset, so we do not have to do anything with that.
 
 ```{r}
 state_market.df$period_begin <- as.Date(state_market.df$period_begin)
@@ -98,7 +98,7 @@ ggplot(split_by_year[[length(split_by_year)]], aes(x = state_code, y = median_sa
 
 \newpage
 
-We created 2 histograms. One is for the median list price of housing units in each of the 27,054 neighborhoods from 2012 to 2021. The other is the median sale price of  over the same length of time. We noticed that both graphs are skewed to the right, so we can assume that there are more homes sold and listed above the overall median home price than below it in the U.S. We also noticed that there is much less variance in the sale price than in the list price, with the right skew in the list price being much less pronounced in the list price than the sale price. Therefore, we can assume that if the asking/list price is higher than the median, the seller receives less in the final sale price in most cases.
+We created 2 histograms. One is for the median list price of housing units in each of the 27,054 neighborhoods from 2012 to 2021. The other is the median sale price of over the same length of time. We noticed that both graphs are skewed to the right, so we can assume that there are more homes sold and listed above the overall median home price than below it in the U.S. We also noticed that there is much less variance in the sale price than in the list price, with the right skew in the list price being much less pronounced in the list price than the sale price. Therefore, we can assume that if the asking/list price is higher than the median, the seller receives less in the final sale price in most cases.
 
 ```{r}
 mean_years <- data.frame(state_market.df$period_begin, state_market.df$median_sale_price_yoy, state_market.df$state)
@@ -132,7 +132,7 @@ print(
 
 \newpage
 
-We can create a bin plot to demonstrate that home sale prices tend to aggregate below a million, between 100 thousand to 300 thousand. We have fitted a best fit line to show that there is a positive increase in median sales price over time, however, with a r-squared value of 0.125, only 12.5% of this increase can be explained by time. This is understandable, since the value of a home includes many factors such as: location, land, size, time built, etc. We can see that both  the townhouse and multi-family units have extreme outliers in the median sales price.
+We can create a bin plot to demonstrate that home sale prices tend to aggregate below a million, between 100 thousand to 300 thousand. We have fitted a best fit line to show that there is a positive increase in median sales price over time, however, with a r-squared value of 0.125, only 12.5% of this increase can be explained by time. This is understandable, since the value of a home includes many factors such as: location, land, size, time built, etc.
 
 ```{r, fig.width = 12, fig.height = 10}
 lm_eqn <- function(df){
@@ -157,7 +157,7 @@ ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)
 
 \newpage
 
-Below, we have created 2 boxplots for the types of housing units. One for the median sale price, the other for the median list price.
+Below, we have created 2 boxplots for the types of housing units. One for the median sale price, the other for the median list price. For our outlier tests, we will test if anything is above the 99th quantile. We chose to be less sensitive in our outlier detection, since house prices vary wildly in the market.
 
 #### Both townhouse and multi-family have extreme outliers in the median sales price.
 
@@ -186,10 +186,9 @@ property_type_outlier_table <- function(df, type, sale_price = TRUE){
   print(table(data$region[outlier_indices]))
 }
 
-cat("For our outlier tests, we will test if anything is above the 99th quantile. We can see
-that for the outliers for multi-family housing the state Hawaii has the most outliers. This
-gives us a good explanation in the reason for the outliers, since Hawaii is a small state
-in the middle of the Pacific serverely limiting the supply of land.")
+cat("We can see that for the outliers for multi-family housing the state Hawaii has the 
+most outliers. This gives us a good explanation in the reason for the outliers, since 
+Hawaii is a small state in the middle of the Pacific serverely limiting the supply of land.")
 
 property_type_outlier_table(state_market.df, type = "Multi-Family")
 
@@ -237,7 +236,7 @@ property_type_outlier_table(state_market.df, type = "Single Family Residential",
 
 \newpage
 
-We created a correlation matrix with our important variables. We expected a strong positive correlation between median sale price and median list price, and an even stronger correlation between median sale price and median price-per-square-foot, but a feature that surprised us was that there was a modest negative correlation between median list price year-on-year and the pending sales year-on-year, which directly contradicts the basic supply-and-demand principle. However, we believe we can attribute this to people being less likely to buy a house if the house is more expensive.
+We created a correlation matrix with our important variables. We expected a strong positive correlation between median sale price and median list price, and an even stronger correlation between median sale price and median price-per-square-foot, but a feature that surprised us was that there was a modest negative correlation between median list price year-on-year and the pending sales year-on-year. We believe we can attribute this to people being less likely to buy a house if the house is more expensive.
 
 ```{r}
 cor.df <- subset.data.frame(state_market.df, select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy),  drop = FALSE)
@@ -251,6 +250,12 @@ corrplot(cor.table, type="upper")
 ```
 
 \newpage
+
+## Change of Plans!
+
+Median sale price was our target variable initially, but we could not find any useful relationships between this variable and the other variables. We found a linear equation to fit the median list price over time, but the r-squared value was too low to for this equation to adequately fit the data. This can attributed to a large variation in sale prices between homes.     Because of the previously unidentified factors in our dataset, we can't always assume that all or most neighborhoods will increase in price at the same rate. We'll now take a closer look at the percentage increase in the number of pending sales per neighborhood. The dataset is too large, so let's pick just one State - California.
+
+Our correlation matrix now gives us much more promising results.
 
 ```{r}
 cor.df <- subset(state_market.df, state_code == 'CA')
@@ -266,10 +271,14 @@ corrplot(cor.table, type="upper")
 
 ## Training our Data
 
+We have decided to go with a linear model with the predictors being inventory_yoy and new_listings_yoy and criterion being pending_sales_yoy. These were select due to there strong correlation they exhibit on each other in the correlation matrix above. From our summary below, we see that both of these variables are statistically significant, since there p-values from the t-test [Pr(>|t|)] is close to zero. We also get an adjusted R^2 of 0.7312 meaning our linear model is of good fit to the data. Interestingly, the inventory_yoy has a negative coefficient, while the new_listings_yoy has a positive coefficient.
+
 ```{r}
 model1 <- lm(pending_sales_yoy~inventory_yoy+new_listings_yoy, cor.df)
 summary(model1)
+```
 
+```{r}
 model2 <- lm(pending_sales_yoy~inventory_yoy, cor.df)
 summary(model2)
 
