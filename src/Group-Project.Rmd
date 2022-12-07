@@ -228,8 +228,8 @@ in places like New York City.")
 property_type_outlier_table(state_market.df, type = "Condo/Co-op", sale_price = FALSE)
 
 cat("California and Columbia leads the US in most outliers for single residential house prices.
-California is the same as described above. Columbia has a low supply compared to the high demand
-in the housing market.")
+California is the same as described above. Columbia has a low supply compared to the high 
+demand in the housing market.")
 
 property_type_outlier_table(state_market.df, type = "Single Family Residential", sale_price = FALSE)
 ```
@@ -253,7 +253,7 @@ corrplot(cor.table, type="upper")
 
 ## Change of Plans!
 
-Median sale price was our target variable initially, but we could not find any useful relationships between this variable and the other variables. We found a linear equation to fit the median list price over time, but the r-squared value was too low to for this equation to adequately fit the data. This can attributed to a large variation in sale prices between homes.     Because of the previously unidentified factors in our dataset, we can't always assume that all or most neighborhoods will increase in price at the same rate. We'll now take a closer look at the percentage increase in the number of pending sales per neighborhood. The dataset is too large, so let's pick just one State - California.
+Median sale price was our target variable initially, but we could not find any useful relationships between this variable and the other variables. We found a linear equation to fit the median list price over time, but the R^2^ value was too low to for this equation to adequately fit the data. This can attributed to a large variation in sale prices between homes.     Because of the previously unidentified factors in our dataset, we can't always assume that all or most neighborhoods will increase in price at the same rate. We'll now take a closer look at the percentage increase in the number of pending sales per neighborhood. The dataset is too large, so let's pick just one State - California.
 
 Our correlation matrix now gives us much more promising results.
 
@@ -271,12 +271,16 @@ corrplot(cor.table, type="upper")
 
 ## Training our Data
 
-We have decided to go with a linear model with the predictors being inventory_yoy and new_listings_yoy and criterion being pending_sales_yoy. These were select due to there strong correlation they exhibit on each other in the correlation matrix above. From our summary below, we see that both of these variables are statistically significant, since there p-values from the t-test [Pr(>|t|)] is close to zero. We also get an adjusted R^2 of 0.7312 meaning our linear model is of good fit to the data. Interestingly, the inventory_yoy has a negative coefficient, while the new_listings_yoy has a positive coefficient.
+We have decided to go with a linear model with the predictors being inventory_yoy and new_listings_yoy and criterion being pending_sales_yoy. These were select due to there strong correlation they exhibit on each other in the correlation matrix above. From our summary below, we see that both of these variables are statistically significant, since there p-values from the t-test [Pr(>|t|)] is close to zero. We also get an adjusted R^2^ of 0.7312 meaning our linear model is of good fit to the data. Interestingly, the inventory_yoy has a negative coefficient, while the new_listings_yoy has a positive coefficient.
 
 ```{r}
 model1 <- lm(pending_sales_yoy~inventory_yoy+new_listings_yoy, cor.df)
 summary(model1)
 ```
+
+\newpage
+
+We can see, from these two models, that choosing just a single predictor yields a substantially lower adjusted R^2^.
 
 ```{r}
 model2 <- lm(pending_sales_yoy~inventory_yoy, cor.df)
@@ -285,6 +289,10 @@ summary(model2)
 model3 <- lm(pending_sales_yoy~new_listings_yoy, cor.df)
 summary(model3)
 ```
+
+\newpage
+
+We can see that homoscedasticity seems to hold, because the points don't seem to deviant more from the line the more farther you go out. However, the data is obviously skewed. More data points lie on one side more than the other. The QQ-plot seems to have a heavy tail suggesting that our distribution fails to yield to a linear model the closer the data point gets to being an outlier. For our cook's distance, no data point is extreme enough to heavily effect our linear model.
 
 ```{r}
 par(mfrow=c(2,2))
@@ -295,9 +303,7 @@ plot(model1)
 
 ## Conclusion
 
-We are going to use linear regression to predict the median sale price of different housing units in 5 years. Since our R^2 is low in the binplot equation, we know that only 12.5% of the  independent variable (median sales price) can be explained through time. We can see that this is a small, but reliable relationship. For us to predict future house prices accurately, we will need to account for other factors that are outside the scope of this dataset; however, we may be able to predict a lower or upper bound or a relative area that future house prices might fall into. Either way, we can confidently confirm that the future housing market will be costlier that the current one.
-
-\newpage
+We tried building a model around our entire (HUGE!) dataset and could not make any reliable observations and/or build models around these observations. We noticed that time is not an accurate predictor of value of houses, since we can't make that assumption that the market will continue to grow steadily over time. There is a strong correlation between median list price and median sale price, but median list price is not an accurate predictor since the sale price data contains much more outliers, and the median list price is not normally distributed like how the median sale price is. Building models was easier after we shrunk our dataset to a single state, since real estate markets differ from state to state. We changed our target variable to the yearly increase in pending sales. We can accurately predict the yearly increase in the number of pending sales of each neighborhood.
 
 ## Sample Data
 
