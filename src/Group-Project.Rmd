@@ -39,11 +39,11 @@ library("scales")
 library("tidyverse")
 ```
 
+\newpage
+
 ### Import the Data
 
-We decided to use the data from this url from Kaggle for our dataset:
-
-https://www.kaggle.com/datasets/thuynyle/redfin-housing-market-data?select=state_market_tracker.tsv000
+We decided to use the data from this url from Kaggle for our dataset: [\textcolor{blue}{Link}](https://www.kaggle.com/datasets/thuynyle/redfin-housing-market-data?select=state_market_tracker.tsv000)
 
 ```{r}
 state_market.df <- read.table("../data/state_market_tracker.tsv000", sep = '\t', header = TRUE)
@@ -73,10 +73,17 @@ Out of the 48 variables in the dataset, these are the ones we will consider (the
 * pending sales year-on-year - **Increase in number of pending sales in each neighborhood year-on-year**
 * new listings year-on-year - **Increase in number of new listings in each neighborhood year-on-year**
 * inventory year-on-year - **Increase in number of all listings in each neighborhood year-on-year**
+* sold_above_list_yoy – **Increase in number of homes sold above list price in each neighborhood**
+* avg_sale_to_list_yoy – **Change in the ratio of homes sold to homes listed in each neighborhood**
+* region – **Categorical variable  that classifies which region the neighborhood is in**
+* state_code – **Categorical variable that is abbreviated state name**
+* property_type – **Type of home**
+
+\newpage
 
 ## Interpreting the Data
 
-Here, we created a boxplot graph for the median list price of the homes in each neighborhood in the dataset in the year 2021, with each boxplot representing each state. Hawaii and and Connecticut were had the highest number of outliers. Since there were more outliers above the boxplot than below it in both cases, we attributed these anomalies to the high cost of living in both states, Since Hawaii is a vacation destination and Connecticut is a New England state with a close proximity to New York City. We can also assume that the states that have a lower overall median sale price also have more consistent prices since boxplots such as Oklahoma and Ohio have a much lower variance and standard deviation than states with higher medians.
+Here, we created a boxplot graph for the median list price of the homes in each neighborhood in the dataset in the year 2021, with each boxplot representing each state. Hawaii and and Connecticut were had the highest number of outliers. Since there were more outliers above the boxplot than below it in both cases, we attributed these anomalies to the high cost of living in both states, Since Hawaii is a vacation destination and Connecticut is a New England state with a close proximity to New York City. We can see that states with much lower overall median sale price, such as Oklahoma and Ohio, also have much lower variance. There is sarious skewness and interquartile ranges between each state. Some are skewed left, and some are skewed right. Majority have small interquartile ranges. A few have large interquartile ranges. Initially, median_sale_price is our target variable, since we want to learn how much money we can make from selling houses!
 
 ```{r, fig.align = 'center', fig.width = 12, fig.height = 10}
 split_by_year <- split(state_market.df, format(state_market.df$period_begin, "%Y"))
@@ -88,6 +95,7 @@ ggplot(split_by_year[[length(split_by_year)]], aes(x = state_code, y = median_sa
   ggtitle("Distribution of Median Sale Price per State") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
 \newpage
 
 We created 2 histograms. One is for the median list price of housing units in each of the 27,054 neighborhoods from 2012 to 2021. The other is the median sale price of  over the same length of time. We noticed that both graphs are skewed to the right, so we can assume that there are more homes sold and listed above the overall median home price than below it in the U.S. We also noticed that there is much less variance in the sale price than in the list price, with the right skew in the list price being much less pronounced in the list price than the sale price. Therefore, we can assume that if the asking/list price is higher than the median, the seller receives less in the final sale price in most cases.
@@ -124,73 +132,9 @@ print(
 
 \newpage
 
-We created a correlation matrix with our important variables. We expected a strong positive correlation between median sale price and median list price, and an even stronger correlation between median sale price and median price-per-square-foot, but a feature that surprised us was that there was a modest negative correlation between median list price year-on-year and the pending sales year-on-year, which directly contradicts the basic supply-and-demand principle. However, we believe we can attribute this to people being less likely to buy a house if the house is more expensive.
-
-```{r}
-
-cor.df <- subset(state_market.df, state_code == 'CA')
-
-cor.df <- subset.data.frame(cor.df,  select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy,sold_above_list_yoy,avg_sale_to_list_yoy))
-
-cor.table <- cor(cor.df, use="pairwise.complete.obs")
-
-corrplot(cor.table, type="upper")
-```
-\newpage
-
-```{r}
-
-variables <- colnames(cor.df)
-numeric_vars <- variables[c(-0,-11)]
-pander(numeric_vars)
-
-```
-
-\newpage
-```{r}
-
-model2 <- lm(
-  pending_sales_yoy~inventory_yoy+new_listings_yoy, cor.df[numeric_vars]
-)
-
-summary(model2)
-```
-
-
-```{r}
-par(mfrow=c(2,2))
-plot(model2)
-```
-
-```{r}
-
-model2 <- lm(
-  pending_sales_yoy~inventory_yoy+new_listings_yoy, cor.df[numeric_vars]
-)
-
-summary(model2)
-```
-
-\newpage
-
-```{r}
-sample_size <- nrow(cor.df)
-mod <- lm(pending_sales_yoy~new_listings_yoy+inventory_yoy, cor.df[numeric_vars])
-cooksd <- cooks.distance(mod)
-influential <- as.numeric(names(cooksd)[(cooksd > (4/sample_size))])
-df2 <- cor.df[-influential, ]
-model4 <- lm(pending_sales_yoy~new_listings_yoy+inventory_yoy, df2[numeric_vars])
-par(mfrow=c(2,2))
-
-summary(model4)
-plot(model4)
-```
-\newpage
-
 We can create a bin plot to demonstrate that home sale prices tend to aggregate below a million, between 100 thousand to 300 thousand. We have fitted a best fit line to show that there is a positive increase in median sales price over time, however, with a r-squared value of 0.125, only 12.5% of this increase can be explained by time. This is understandable, since the value of a home includes many factors such as: location, land, size, time built, etc. We can see that both  the townhouse and multi-family units have extreme outliers in the median sales price.
 
 ```{r, fig.width = 12, fig.height = 10}
-
 lm_eqn <- function(df){
     m <- lm(median_sale_price ~ as.yearmon(period_begin), df);
     eq <- substitute(italic(median_sale_price) == b %.% italic(period_begin) + a*","~~italic(r)^2~"="~r2, 
@@ -210,10 +154,10 @@ ggplot(state_market.df, aes(x = as.yearmon(period_begin), y = median_sale_price)
   geom_smooth(method = "lm", se = FALSE, color = "red") +
   annotate("text", x = as.numeric(as.yearmon("2014-06-01")), y = 3000, parse = TRUE, label = lm_eqn(state_market.df))
 ```
+
 \newpage
 
 Below, we have created 2 boxplots for the types of housing units. One for the median sale price, the other for the median list price.
-
 
 #### Both townhouse and multi-family have extreme outliers in the median sales price.
 
@@ -290,6 +234,55 @@ in the housing market.")
 
 property_type_outlier_table(state_market.df, type = "Single Family Residential", sale_price = FALSE)
 ```
+
+\newpage
+
+We created a correlation matrix with our important variables. We expected a strong positive correlation between median sale price and median list price, and an even stronger correlation between median sale price and median price-per-square-foot, but a feature that surprised us was that there was a modest negative correlation between median list price year-on-year and the pending sales year-on-year, which directly contradicts the basic supply-and-demand principle. However, we believe we can attribute this to people being less likely to buy a house if the house is more expensive.
+
+```{r}
+cor.df <- subset.data.frame(state_market.df, select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy),  drop = FALSE)
+cor.table <- cor(cor.df, use="pairwise.complete.obs")
+
+rownames(cor.table) <- c("median sale price", "median list price", "median sale price year-on-year", "median list price year-on-year", "median sale ppsf", "median list ppsf", "homes sold year-old-year", "pending sales year-on-year", "new listings year-on-year", "inventory year-on-year")
+
+colnames(cor.table) <- c("median sale price", "median list price", "median sale price year-on-year", "median list price year-on-year", "median sale ppsf", "median list ppsf", "homes sold year-old-year", "pending sales year-on-year", "new listings year-on-year", "inventory year-on-year")
+
+corrplot(cor.table, type="upper")
+```
+
+\newpage
+
+```{r}
+cor.df <- subset(state_market.df, state_code == 'CA')
+
+cor.df <- subset.data.frame(cor.df,  select = c(median_sale_price, median_list_price, median_sale_price_yoy, median_list_price_yoy, median_ppsf, median_list_ppsf, homes_sold_yoy, pending_sales_yoy, new_listings_yoy, inventory_yoy,sold_above_list_yoy,avg_sale_to_list_yoy))
+
+cor.table <- cor(cor.df, use="pairwise.complete.obs")
+
+corrplot(cor.table, type="upper")
+```
+
+\newpage
+
+## Training our Data
+
+```{r}
+model1 <- lm(pending_sales_yoy~inventory_yoy+new_listings_yoy, cor.df)
+summary(model1)
+
+model2 <- lm(pending_sales_yoy~inventory_yoy, cor.df)
+summary(model2)
+
+model3 <- lm(pending_sales_yoy~new_listings_yoy, cor.df)
+summary(model3)
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(model1)
+```
+
+\newpage
 
 ## Conclusion
 
